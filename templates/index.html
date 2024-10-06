@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facial Recognition System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-bg-color: #1a1a1a;
+            --container-bg-color: #2a2a2a;
+            --text-color: #ffffff;
+            --accent-color: #d4af37;
+            
+            /* Adjust these variables to change font weights throughout the page */
+            --body-font-weight: 300;  
+            --heading-font-weight: 300; 
+            --subheading-font-weight: 200; 
+            --emphasis-font-weight: 500; 
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            font-weight: var(--body-font-weight);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--main-bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--container-bg-color);
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            position: relative;
+            padding-bottom: 40px;
+        }
+        .footer {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #888;
+    font-weight: 300;
+}
+        h1 {
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            font-weight: var(--heading-font-weight); 
+        }
+        #videoFeed {
+            max-width: 100%;
+            border: 2px solid var(--accent-color);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(74,144,226,0.3);
+        }
+        #analysisData {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #333333;
+            border: 1px solid #4a4a4a;
+            border-radius: 5px;
+        }
+        #analysisData h2 {
+            color: var(--accent-color);
+            margin-top: 0;
+            font-weight: var(--subheading-font-weight);
+        }
+        #analysisData p {
+            margin: 10px 0;
+        }
+        #faceCount, #processingTime {
+            font-weight: var(--emphasis-font-weight); 
+            color: var(--accent-color);
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Facial Recognition System</h1>
+        <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Video feed">
+        <div id="analysisData">
+            <h2>Live Analysis</h2>
+            <p>Faces detected: <span id="faceCount">0</span></p>
+            <p>Processing time: <span id="processingTime">0</span> ms</p>
+        </div>
+        <div class="footer">
+            HANZALAH ABDULHAMID NAGUTHANE
+        </div>
+    </div>
+
+    <script>
+        function updateAnalysisData() {
+            fetch('/analysis_data')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('faceCount').textContent = data.faceCount;
+                    document.getElementById('processingTime').textContent = data.processingTime;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Update analysis data every 100ms
+        setInterval(updateAnalysisData, 100);
+    </script>
+</body>
+</html>

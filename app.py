@@ -1,0 +1,60 @@
+import cv2
+import numpy as np
+from flask import Flask, Response, render_template, jsonify
+import time
+
+app = Flask(__name__)
+
+# Load pre-trained face detection model
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+# Global variables to store analysis data
+face_count = 0
+processing_time = 0
+
+def detect_faces(frame):
+    global face_count, processing_time
+    start_time = time.time()
+    
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+    
+    face_count = len(faces)
+    for (x, y, w, h) in faces:
+        cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+    
+    processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
+    return frame
+
+def gen_frames():
+    video = cv2.VideoCapture('axonfootage.mp4')  
+    while True:
+        success, frame = video.read()
+        if not success:
+            break
+        else:
+            frame = detect_faces(frame)
+            ret, buffer = cv2.imencode('.jpg', frame)
+            frame = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/analysis_data')
+def analysis_data():
+    global face_count, processing_time
+    return jsonify({
+        'faceCount': face_count,
+        'processingTime': round(processing_time, 2)
+    })
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run(debug=True)
