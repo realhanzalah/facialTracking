@@ -64,14 +64,23 @@ def analysis_data():
 @app.route('/')
 def index():
     return render_template('index.html')
-
 @app.route('/check_video')
 def check_video():
     video_path = os.path.join(app.static_folder, VIDEO_FILENAME)
+    app_root = os.path.dirname(os.path.abspath(__file__))
+    static_folder = os.path.join(app_root, 'static')
+    
+    response = f"App root: {app_root}\n"
+    response += f"Static folder path: {static_folder}\n"
+    response += f"Looking for video at: {video_path}\n"
+    response += f"Static folder contents: {os.listdir(static_folder)}\n"
+    
     if os.path.exists(video_path):
-        return f"Video file exists. Size: {os.path.getsize(video_path)} bytes"
+        response += f"Video file exists. Size: {os.path.getsize(video_path)} bytes"
     else:
-        return "Video file not found", 404
+        response += "Video file not found"
+    
+    return response, 200 if os.path.exists(video_path) else 404
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
