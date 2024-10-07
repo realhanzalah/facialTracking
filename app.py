@@ -13,6 +13,9 @@ face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_fronta
 face_count = 0
 processing_time = 0
 
+# Update this to your actual video file name
+VIDEO_FILENAME = 'static/axonfootage.mp4'
+
 def detect_faces(frame):
     global face_count, processing_time
     start_time = time.time()
@@ -29,12 +32,12 @@ def detect_faces(frame):
 
 @app.route('/video')
 def serve_video():
-    return send_from_directory('static', 'bodycam_footage.mp4')
+    return send_from_directory('static', VIDEO_FILENAME)
 
 @app.route('/video_feed')
 def video_feed():
     def generate():
-        video = cv2.VideoCapture('static/bodycam_footage.mp4')
+        video = cv2.VideoCapture(os.path.join('static', VIDEO_FILENAME))
         while True:
             success, frame = video.read()
             if not success:
@@ -61,6 +64,14 @@ def analysis_data():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/check_video')
+def check_video():
+    video_path = os.path.join(app.static_folder, VIDEO_FILENAME)
+    if os.path.exists(video_path):
+        return f"Video file exists. Size: {os.path.getsize(video_path)} bytes"
+    else:
+        return "Video file not found", 404
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
