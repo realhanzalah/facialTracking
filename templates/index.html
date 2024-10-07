@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Facial Recognition System</title>
+    <title>Body Cam Facial Tracking</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -84,10 +84,7 @@
 <body>
     <div class="container">
         <h1>Facial Recognition System</h1>
-        <video id="videoFeed" width="640" height="480" controls>
-            <source src="{{ url_for('serve_video') }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+        <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Video feed">
         <div id="analysisData">
             <h2>Live Analysis</h2>
             <p>Faces detected: <span id="faceCount">0</span></p>
@@ -104,7 +101,7 @@
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('faceCount').textContent = data.faceCount;
-                    document.getElementById('processingTime').textContent = data.processingTime;
+                    document.getElementById('processingTime').textContent = data.processingTime.toFixed(2);
                 })
                 .catch(error => console.error('Error:', error));
         }
