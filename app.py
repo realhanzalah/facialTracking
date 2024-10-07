@@ -1,10 +1,13 @@
+import os
+from flask import Flask, send_from_directory, render_template, jsonify, Response
 import cv2
 import numpy as np
-from flask import Flask, Response, render_template, jsonify, send_from_directory
 import time
-import os
 
 app = Flask(__name__, static_folder='static')
+
+# Update this to your actual video file name
+VIDEO_FILENAME = 'axonfootage.mp4'
 
 # Load pre-trained face detection model
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -12,9 +15,6 @@ face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_fronta
 # Global variables to store analysis data
 face_count = 0
 processing_time = 0
-
-# Update this to your actual video file name
-VIDEO_FILENAME = 'static/axonfootage.mp4'
 
 def detect_faces(frame):
     global face_count, processing_time
@@ -32,12 +32,12 @@ def detect_faces(frame):
 
 @app.route('/video')
 def serve_video():
-    return send_from_directory('static', VIDEO_FILENAME)
+    return send_from_directory(app.static_folder, VIDEO_FILENAME)
 
 @app.route('/video_feed')
 def video_feed():
     def generate():
-        video = cv2.VideoCapture(os.path.join('static', VIDEO_FILENAME))
+        video = cv2.VideoCapture(os.path.join(app.static_folder, VIDEO_FILENAME))
         while True:
             success, frame = video.read()
             if not success:
@@ -64,16 +64,16 @@ def analysis_data():
 @app.route('/')
 def index():
     return render_template('index.html')
+
 @app.route('/check_video')
 def check_video():
     video_path = os.path.join(app.static_folder, VIDEO_FILENAME)
     app_root = os.path.dirname(os.path.abspath(__file__))
-    static_folder = os.path.join(app_root, 'static')
     
     response = f"App root: {app_root}\n"
-    response += f"Static folder path: {static_folder}\n"
+    response += f"Static folder path: {app.static_folder}\n"
     response += f"Looking for video at: {video_path}\n"
-    response += f"Static folder contents: {os.listdir(static_folder)}\n"
+    response += f"Static folder contents: {os.listdir(app.static_folder)}\n"
     
     if os.path.exists(video_path):
         response += f"Video file exists. Size: {os.path.getsize(video_path)} bytes"
