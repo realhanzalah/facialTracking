@@ -42,7 +42,7 @@
             margin-bottom: 20px;
             font-weight: var(--heading-font-weight);
         }
-        #videoPlayer {
+        #videoFeed {
             max-width: 100%;
             border: 2px solid var(--accent-color);
             border-radius: 5px;
@@ -84,10 +84,7 @@
 <body>
     <div class="container">
         <h1>Facial Recognition System</h1>
-        <video id="videoPlayer" controls autoplay loop>
-            <source src="{{ url_for('serve_video') }}" type="video/mp4">
-            Your browser does not support the video tag.
-        </video>
+        <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Video feed">
         <div id="analysisData">
             <h2>Live Analysis</h2>
             <p>Faces detected: <span id="faceCount">0</span></p>
