@@ -7,41 +7,48 @@ import threading
 
 app = Flask(__name__, static_folder='static')
 
-# Update this to your actual video file name
 VIDEO_FILENAME = 'axonfootage.mp4'
-
-# Load pre-trained face detection model
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-# Global variables to store analysis data
 face_count = 0
 processing_time = 0
 processed_frame = None
+frame_count = 0
+PROCESS_EVERY_N_FRAMES = 5  # Process every 5th frame
 
 def process_video():
-    global face_count, processing_time, processed_frame
+    global face_count, processing_time, processed_frame, frame_count
     video = cv2.VideoCapture(os.path.join(app.static_folder, VIDEO_FILENAME))
+    
+    # Get video properties
+    fps = video.get(cv2.CAP_PROP_FPS)
+    frame_time = 1 / fps
+
     while True:
+        start_time = time.time()
         success, frame = video.read()
         if not success:
             video.set(cv2.CAP_PROP_POS_FRAMES, 0)  # Loop the video
             continue
+
+        frame_count += 1
         
-        start_time = time.time()
-        
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-        
-        face_count = len(faces)
-        for (x, y, w, h) in faces:
-            cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        
-        processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
-        
+        if frame_count % PROCESS_EVERY_N_FRAMES == 0:
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+            face_count = len(faces)
+            for (x, y, w, h) in faces:
+                cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
+            
+            processing_time = (time.time() - start_time) * 1000
+
         ret, buffer = cv2.imencode('.jpg', frame)
         processed_frame = buffer.tobytes()
-        
-        time.sleep(0.03)  # Adjust for desired frame rate
+
+        # Calculate sleep time to maintain original video frame rate
+        elapsed_time = time.time() - start_time
+        sleep_time = max(0, frame_time - elapsed_time)
+        time.sleep(sleep_time)
 
 @app.route('/video')
 def serve_video():
@@ -55,7 +62,6 @@ def video_feed():
             if processed_frame is not None:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + processed_frame + b'\r\n')
-            time.sleep(0.03)  # Adjust for desired frame rate
 
     return Response(generate(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
