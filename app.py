@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
-from flask import Flask, Response, render_template, jsonify
+from flask import Flask, Response, render_template, jsonify, send_from_directory
 import time
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')
 
 # Load pre-trained face detection model
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -27,22 +27,27 @@ def detect_faces(frame):
     processing_time = (time.time() - start_time) * 1000  # Convert to milliseconds
     return frame
 
-def gen_frames():
-    video = cv2.VideoCapture('bodycam_footage.mp4')  # Replace with your video file
-    while True:
-        success, frame = video.read()
-        if not success:
-            break
-        else:
-            frame = detect_faces(frame)
-            ret, buffer = cv2.imencode('.jpg', frame)
-            frame = buffer.tobytes()
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+@app.route('/video')
+def serve_video():
+    return send_from_directory('static', 'bodycam_footage.mp4')
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(gen_frames(),
+    def generate():
+        video = cv2.VideoCapture('static/bodycam_footage.mp4')
+        while True:
+            success, frame = video.read()
+            if not success:
+                break
+            else:
+                frame = detect_faces(frame)
+                ret, buffer = cv2.imencode('.jpg', frame)
+                frame = buffer.tobytes()
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+        video.release()
+
+    return Response(generate(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/analysis_data')
