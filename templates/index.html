@@ -42,12 +42,11 @@
             margin-bottom: 20px;
             font-weight: var(--heading-font-weight);
         }
-        #videoFeed {
+        #videoPlayer {
             max-width: 100%;
             border: 2px solid var(--accent-color);
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(212,175,55,0.3);
-            image-rendering: pixelated;
         }
         #analysisData {
             margin-top: 20px;
@@ -80,20 +79,15 @@
             color: #888;
             font-weight: 300;
         }
-
-        #videoFeed {
-            max-width: 100%;
-            border: 2px solid var(--accent-color);
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(212,175,55,0.3);
-
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Facial Recognition System</h1>
-        <img id="videoFeed" src="{{ url_for('video_feed') }}" alt="Video feed">
+        <video id="videoPlayer" controls autoplay loop>
+            <source src="{{ url_for('serve_video') }}" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
         <div id="analysisData">
             <h2>Live Analysis</h2>
             <p>Faces detected: <span id="faceCount">0</span></p>
@@ -115,8 +109,8 @@
                 .catch(error => console.error('Error:', error));
         }
 
-        // Update analysis data every 200ms to reduce load
-        setInterval(updateAnalysisData, 200);
+        // Update analysis data every 100ms
+        setInterval(updateAnalysisData, 100);
     </script>
 </body>
 </html>
